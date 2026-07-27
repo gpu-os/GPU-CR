@@ -188,6 +188,11 @@ int main(int argc, char* argv[]) {
         printf("Process internal restoration finished.\n");
         printf("Restoring done\n");
 #else
+        comm->send_msg(RESTORE_MSG);
+        kill(pid, CR_RESTORE_SIGNAL);
+        while(!comm->is_finished()) {
+            usleep(1000);
+        }
         std::string bin_path = get_cuda_checkpoint_path();
         std::string cmd = bin_path + " --toggle --pid " + std::to_string(pid);
         auto t0 = std::chrono::high_resolution_clock::now();
@@ -199,12 +204,6 @@ int main(int argc, char* argv[]) {
         }
         auto t1 = std::chrono::high_resolution_clock::now();
         printf("cuda-checkpoint restore time: %.3f s\n", std::chrono::duration<double>(t1 - t0).count());
-        fflush(stdout);
-        comm->send_msg(RESTORE_MSG);
-        kill(pid, CR_RESTORE_SIGNAL);
-        while(!comm->is_finished()) {
-            usleep(1000);
-        }
         printf("Restoring done\n");
 #endif
     }
